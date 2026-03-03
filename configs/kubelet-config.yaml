@@ -1,0 +1,45 @@
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+# 全てのIPの10250ポートでlistenする。 例えば：127.0.0.1:10250、10.x.x.x:10250など
+address: "0.0.0.0"
+authentication:
+# 匿名認証を禁ずる。つまり、mTLSあるいはBearerTokenを必ず使うこと。
+  anonymous:
+    enabled: false
+# webhook認証を使う：リクエストにTokenがあったら、このTokenをAPI serverに問い合わせます
+  webhook:
+    enabled: true
+# クライアント証明書（mTLS）の認証も有効
+  x509:
+    clientCAFile: "/var/lib/kubelet/ca.crt"
+# ここは認可方法をBearerTokenにします
+authorization:
+# 三つのmodeがあります：alwaysallow, alwaysdeny,webhook
+  mode: Webhook
+# cgroup：cgroup（control groups）は、Linuxカーネルが提供するプロセスグループ単位でシステムリソース（CPU、メモリ、I/O、ネットワーク）を制限・監視・分離する機能です。
+# cgroup の管理を systemd v2でやる
+cgroupDriver: systemd
+# kubelet が使うコンテナランタイムは containerd
+# kubelet はこの Unix socket に接続して「コンテナ作って」「止めて」など指示する（CRI 経由）。
+containerRuntimeEndpoint: "unix:///var/run/containerd/containerd.sock"
+# kubelet の HTTPS サーバを起動します
+enableServer: true
+# swap が有効でも kubelet が即死しない（古い慣習では swap 有効だと kubelet を落とすことが多い）
+# Kubernetes は基本的に「Pod のメモリ制限（limit）を超えたら OOMKill で落とす」みたいに 予測しやすい挙動を前提にしています。
+# swap があると：メモリ不足なのに「落ちずに swap に逃げて延命」してしまい、遅い状態でずっと生きる、どの Pod が本当にメモリを食ってるのかが見えにくくなる
+failSwapOn: false
+# そのノードに載せていい Pod 数の上限。
+maxPods: 16
+# NoSwap：Pod には swap を使わせないの設定
+memorySwap:
+  swapBehavior: NoSwap
+port: 10250
+# Pod の DNS 設定を作るときに参照する resolv.conf のパス。
+# resolvConf は、Linux が DNS（名前解決）をするときの設定ファイルです。
+resolvConf: "/etc/resolv.conf"
+# kubelet が起動すると、自分のノード情報を Kubernetes の API Server に送って「このマシンはクラスタの一員です」と “Node リソース” を作成/更新しに行く
+registerNode: true
+# containerd への操作（pull など）が長引いた時のタイムアウト。
+runtimeRequestTimeout: "15m"
+tlsCertFile: "/var/lib/kubelet/kubelet.crt"
+tlsPrivateKeyFile: "/var/lib/kubelet/kubelet.key"

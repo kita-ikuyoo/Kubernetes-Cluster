@@ -1,0 +1,40 @@
+[Unit]
+Description=Kubernetes Controller Manager
+Documentation=https://github.com/kubernetes/kubernetes
+
+[Service]
+ExecStart=/usr/local/bin/kube-controller-manager\
+    # 全てのHTTPエンドポイントで待ち受けている
+    # 0.0.0.0はすべてのIPアドレスの意味
+    --bind-address=0.0.0.0 \
+    # controller-managerが決めるPodのIPレンジ。このIPレンジを各ノードに割り当てれます。例えば、node-0:10.200.0.0/24
+    --cluster-cidr=10.0.0.0/16 \
+    # ここのcluster nameはkubernetes、kubeconfigファイルのclusterの名前とは違います。
+    # その理由は、kubeconfigファイル内のcluster nameはただとあるserverを標識するための名前でクラスタ本体には送りません。
+    # ここの名前もcontroller-managerが
+    --cluster-name=kubernetes \
+    # kube-controller-managerのCSR関連コントローラーがkubeletからのCSR署名請求に対して、署名する任務があります。
+    # 従って、ここでca.crtとca.keyが設定されました。
+    --cluster-signing-cert-file=/var/lib/kubernetes/ca.crt \
+    --cluster-signing-key-file=/var/lib/kubernetes/ca.key \
+    --kubeconfig=/var/lib/kubernetes/kube-controller-manager.kubeconfig \
+    # これを使うと、service account token secretにca.crtが入ります。
+    # 何でca.crtが必要とされますか：あるポッドがJWTを使ってapiserverとmTLSで通信するとき、apiserverの真実性を確認するため、信頼できるCAが必要です。
+    # それなら、直接ノードあるいはポッドにca.crtをいれればいいじゃないですか？ノードに入れると、ポッドがノードからファイルをマウントする必要がある：めんどくさいかつ不安全
+    # 直接ポッドに入れると：毎回ポッドを立てる時それを設定する必要があります。このようにcontrol planeにより管理される方がtokenの更新とかもしやすいです。
+    # 更に、以上は長命tokenの場合の話です、いまは普通短命トークンを使っています：https://chatgpt.com/s/t_69a27a9dbbf48191b2687c6eeae0b13e。
+    --root-ca-file=/var/lib/kubernetes/ca.crt \
+    # ヘッドとペイロードを署名する時に使う鍵です。
+    --service-account-private-key-file=/var/lib/kubernetes/service-accounts.key \  
+    # serviceに割り当てるIPレンジ
+    --service-cluster-ip-range=10.32.0.0/24 \
+    # service accountを使って通信する。
+    --use-service-account-credentials=true
+    # --v=2 は kube-scheduler のログの詳細度（verbosity） を指定するオプションです。
+    --v=2
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

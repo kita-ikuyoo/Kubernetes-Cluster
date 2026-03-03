@@ -1,0 +1,57 @@
+[Unit]
+Description=Kubernetes API Server
+Documentation=https://github.com/kubernetes/kubernetes
+
+[Service]
+ExecStart=/usr/local/bin/kube-apiserver \
+# privileged Pod（特権コンテナ）を許可する。privileged Podはコンテナを ほぼホスト（ノード）と同じ強い権限で動かせるようにした Pod のことです。
+  --allow-privileged=true \
+# 監査ログを何日保持するか（30）
+  --audit-log-maxage=30 \
+# 「ローテーションした監査ログのバックアップ数」は、ログが大きくなって 新しいファイルに切り替わった後、古いログファイルを 何世代ぶん残すか の上限です。
+  --audit-log-maxbackup=3 \
+# 監査ログ audit.log が 100MB に達するとローテーション（切り替え）する
+  --audit-log-maxsize=100 \
+# 監査ログの出力先
+  --audit-log-path=/var/log/audit.log \
+# Nodeモードで、全てのノードは自分のリソースにしかアクセスできません。
+  --authorization-mode=Node,RBAC \
+# 
+  --bind-address=0.0.0.0 \
+# mTLS方式でクライアント証明書を検証するためのCA証明書
+  --client-ca-file=/var/lib/kubernetes/ca.crt \
+# admission control
+  --enable-admission-plugins=NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \
+  --etcd-servers=http://127.0.0.1:2379 \
+# Event リソースの保存時間
+  --event-ttl=1h \
+# at rest暗号化に使うencryption-provider-config
+  --encryption-provider-config=/var/lib/kubernetes/encryption-config.yaml \
+# API serverがkubeletへ接続する際に使われるもの
+# kubeletのサーバ証明書を検証するCA
+  --kubelet-certificate-authority=/var/lib/kubernetes/ca.crt \
+# 自分が使うclient証明書
+  --kubelet-client-certificate=/var/lib/kubernetes/kube-api-server.crt \
+# 自分の秘密鍵
+  --kubelet-client-key=/var/lib/kubernetes/kube-api-server.key \
+
+# どのAPIグループを提供する
+  --runtime-config='api/all=true' \
+# JWT検証の時、サーバはJWTの内容が改ざんされかどうかだけを検証します。だからここにservice-accounts.crtにある公開鍵が必要です
+  --service-account-key-file=/var/lib/kubernetes/service-accounts.crt \
+# JWTに署名するための秘密鍵
+  --service-account-signing-key-file=/var/lib/kubernetes/service-accounts.key \
+# 発行者(issuer)としてこのURLを入れる。apiserverが発行する
+  --service-account-issuer=https://server.kubernetes.local:6443 \
+
+# service リソースに割り当てられるポートのレンジ
+  --service-node-port-range=30000-32767 \
+# 自分の証明書と秘密鍵
+  --tls-cert-file=/var/lib/kubernetes/kube-api-server.crt \
+  --tls-private-key-file=/var/lib/kubernetes/kube-api-server.key \
+  --v=2
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

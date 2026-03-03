@@ -1,0 +1,8 @@
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+clientConnection:
+  kubeconfig: "/var/lib/kubernetes/kube-scheduler.kubeconfig"
+# 複数のkube-schedulerが同時に動くとしても、実際にスケジューリング処理を行うのは“リーダー”1台だけになります。他の scheduler は スタンバイして、リーダーが落ちたら次のリーダーを選びます。
+# これがないと（または false だと）、複数台が同時にスケジュールしようとして衝突したり、二重に処理したりするリスクが出ます。
+leaderElection:
+  leaderElect: true
