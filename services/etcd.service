@@ -15,6 +15,8 @@ ExecStart=/usr/local/bin/etcd \
     --listen-peer-urls http://127.0.0.1:2380
 # クラスタ内のメンバ一覧
     --initial-cluster controller=http://127.0.0.1:2380
+# apiserverなどのクライアントがcontrollerノードと通信したいなら、http://127.0.0.1:2379 にアクセスする
+# これはkube-apiserver.serviceの--etcd-serversと対応しています
     --advertise-client-urls http://127.0.0.1:2379
     --listen-client-urls http://127.0.0.1:2379
 # このクラスタの識別名です

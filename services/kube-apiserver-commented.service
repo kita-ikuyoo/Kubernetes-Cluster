@@ -16,7 +16,7 @@ ExecStart=/usr/local/bin/kube-apiserver \
   --audit-log-path=/var/log/audit.log \
 # Nodeモードで、全てのノードは自分のリソースにしかアクセスできません。
   --authorization-mode=Node,RBAC \
-# 
+# このマシンに到達する全てののIP addressで待ち受けています。
   --bind-address=0.0.0.0 \
 # mTLS方式でクライアント証明書を検証するためのCA証明書
   --client-ca-file=/var/lib/kubernetes/ca.crt \
